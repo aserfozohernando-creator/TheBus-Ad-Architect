@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TheBus InfoTainment Pro Ads Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root { --primary-gradient: linear-gradient(45deg, #0d6efd, #0a58ca); }
+    body { background-color: var(--bs-body-bg); transition: background-color 0.3s ease; }
+    .card { border-radius: 1rem; border: none; }
+    .brand-container { display: flex; align-items: center; gap: 15px; }
+    .main-logo { height: 80px; width: auto; object-fit: contain; }
+    .result-box { background: var(--primary-gradient); color: #fff; border-radius: 1rem; padding: 2rem; }
+    #screens { width: 80px; text-align: center; font-weight: bold; }
+    .sov-gauge { background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px; margin-top: 15px; border: 1px solid rgba(255, 255, 255, 0.2); }
+    .package-group-label { font-size: 0.7rem; letter-spacing: 1px; color: var(--bs-secondary); }
+    .package-btn { font-size: 0.75rem; font-weight: 600; padding: 5px 2px; }
+    .package-btn.active { background-color: #0d6efd !important; color: white !important; border-color: #0d6efd !important; }
+    .value-leader-badge { font-size: 0.65rem; background: #198754; color: white; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+    .metric-sub { font-size: 0.75rem; opacity: 0.8; font-weight: 400; }
+
+    @media print {
+      #pdfCoverPage { display: flex !important; flex-direction: column; justify-content: center; align-items: center; height: 100vh; page-break-after: always; text-align: center; }
+      .cover-logo { height: 150px; margin-bottom: 20px; }
+      .btn, #themeToggle, #resetAllBtn, #destroyDbBtn, .no-print, .tos-container, hr { display: none !important; }
+      body { background: white !important; color: black !important; padding: 0; margin: 0; }
+      .card, .result-box, .row, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+      .result-box { color: #000 !important; background: #f8f9fa !important; border: 2px solid #0d6efd !important; }
+      #comparisonWrapper { display: block !important; margin-top: 20px; }
+    }
+    #pdfCoverPage { display: none; }
+  </style>
+</head>
+
+<body data-bs-theme="light">
+
+<div id="pdfCoverPage">
+    <img src="TheBus-Logo-b.png" alt="Logo" class="cover-logo">
+    <h1 class="display-3 fw-bold text-primary">Digital Ad Request</h1>
+    <h3 class="text-muted">Advertising Architect PWA v1.1</h3>
+</div>
+
+<div class="container my-5" style="max-width: 1100px;">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div class="brand-container">
+            <img src="TheBus-Logo-b.png" alt="Logo" class="main-logo">
+            <div>
+                <h5 class="text-primary fw-bold mb-0">Digital Ads Solutions</h5>
+                <small class="text-muted" style="font-size: 0.7rem;">Architect PWA (IndexedDB)</small>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="resetAllBtn" class="btn btn-outline-warning btn-sm"><i class="bi bi-eraser"></i> Reset Form</button>
+            <button id="destroyDbBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash3"></i> Destroy DB</button>
+            <button id="themeToggle" class="btn btn-outline-secondary btn-sm"><i class="bi bi-moon-stars"></i></button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <form id="adCalculatorForm" class="needs-validation" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-12"><small class="text-uppercase fw-bold text-muted">Client Details</small></div>
+                            <div class="col-md-6"><label class="form-label">Name *</label><input type="text" class="form-control" id="advertiserName" required></div>
+                            <div class="col-md-6"><label class="form-label">Email *</label><input type="email" class="form-control" id="email" required></div>
+                            <div class="col-md-12"><label class="form-label">Phone *</label><input type="tel" class="form-control" id="phone" required maxlength="14" placeholder="(352) 555-1212"></div>
+ 
+                            <hr class="no-print">
+                            <div class="col-md-12 mt-2 no-print"><small class="text-uppercase fw-bold text-muted">Quick Packages</small></div>
+                            <div class="mb-2 no-print">
+                                <div class="row g-2">
+                                    <div class="col-4"><small class="package-group-label d-block mb-1">STATIC</small><div class="d-grid gap-1" id="pkg-static"></div></div>
+                                    <div class="col-4"><small class="package-group-label d-block mb-1">MOTION</small><div class="d-grid gap-1" id="pkg-motion"></div></div>
+                                    <div class="col-4"><small class="package-group-label d-block mb-1">VIDEO</small><div class="d-grid gap-1" id="pkg-video"></div></div>
+                                </div>
+                            </div>                      
+                            
+                            <hr>
+                            <div class="col-md-12 mt-2"><small class="text-uppercase fw-bold text-muted">Campaign Settings</small></div>
+                            <div class="col-md-4"><label class="form-label">Screens</label><input type="number" class="form-control bg-light" id="screens" disabled readonly></div>
+                            <div class="col-md-4"><label class="form-label">Days</label><select class="form-select" id="campaignDays"><option value="30">30 Days</option><option value="60">60 Days</option><option value="90">90 Days</option></select></div>
+                            <div class="col-md-4"><label class="form-label">Type</label><select class="form-select" id="adType"><option value="Static" data-fee="0">Static</option><option value="Motion" data-fee="150">Motion</option><option value="Video" data-fee="300">Video</option></select></div>
+                            <div class="col-md-12"><label class="form-label">Ad Length (Seconds)</label><input type="number" class="form-control" id="adDuration" value="15" min="5" max="180"></div>
+
+                            <div class="col-12 mt-3 tos-container">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="tosCheck" required>
+                                    <label class="form-check-label small" for="tosCheck">I understand this is an estimate and final pricing depends on route availability. *</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-start border-primary border-4 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-broadcast"></i> Network Intelligence</h6>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <h4 class="mb-0 fw-bold" id="stats-per-hour">0</h4>
+                            <small class="text-muted text-uppercase" style="font-size:0.65rem;">Plays / Hour / Screen</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="mb-0 fw-bold" id="stats-daily">0</h4>
+                            <small class="text-muted text-uppercase" style="font-size:0.65rem;">Total Daily Plays</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="sticky-top" style="top: 20px;">
+                <div class="result-box shadow mb-3">
+                    <h6 class="text-white-50">ESTIMATED TOTAL</h6>
+                    <h2 class="display-5 fw-bold mb-0" id="totalCost">$0.00</h2>
+                    
+                    <div class="d-flex gap-3 mt-2 mb-3">
+                        <div><span class="metric-sub">Cost / Play:</span> <span id="cost-per-play" class="fw-bold">--</span></div>
+                        <div><span class="metric-sub">CPM:</span> <span id="cpm-value" class="fw-bold">--</span></div>
+                    </div>
+
+                    <p class="small opacity-75 mb-3" id="cycleSummary"></p>
+                    
+                    <div class="sov-gauge mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="fw-bold text-white-50">Share of Voice</small>
+                            <span class="badge bg-light text-primary" id="sovValue">0%</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.2);"><div id="sovBar" class="progress-bar bg-white" style="width: 0%"></div></div>
+                    </div>
+
+                    <button class="btn btn-light w-100 mb-2 fw-bold no-print" id="saveQuoteBtn">Add to Comparison</button>
+                    <div class="row g-2 mb-3 no-print">
+                        <div class="col-6"><button class="btn btn-outline-light w-100 btn-sm" id="printBtn">PDF Export</button></div>
+                        <div class="col-6"><button class="btn btn-primary w-100 btn-sm border-white" id="sendRequestBtn">Submit Quote</button></div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm" id="reachSection">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Projected Network Reach</h6>
+                        <div style="height: 180px;"><canvas id="reachChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="comparisonWrapper" class="card shadow-sm mb-5 d-none mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Saved Comparisons (IndexedDB)</h6>
+                <button id="clearTableBtn" class="btn btn-outline-danger btn-sm no-print">Clear All</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" style="font-size: 0.8rem;">
+                    <thead><tr><th>Ad Type</th><th>SOV</th><th>Days</th><th>Screens</th><th>Total</th><th class="no-print"></th></tr></thead>
+                    <tbody id="comparisonBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// --- 1. PWA & SERVICE WORKER ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+}
+
+// --- 2. INDEXED DB ENGINE ---
+const dbProvider = {
+    name: "BusAdsDB",
+    version: 1,
+    store: "quotes",
+    
+    init() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(this.name, this.version);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.store)) {
+                    db.createObjectStore(this.store, { keyPath: "id", autoIncrement: true });
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    },
+
+    async getAll() {
+        const db = await this.init();
+        return new Promise(res => {
+            const req = db.transaction(this.store, "readonly").objectStore(this.store).getAll();
+            req.onsuccess = () => res(req.result);
+        });
+    },
+
+    async save(item) {
+        const db = await this.init();
+        const tx = db.transaction(this.store, "readwrite");
+        tx.objectStore(this.store).add(item);
+    },
+
+    async remove(id) {
+        const db = await this.init();
+        const tx = db.transaction(this.store, "readwrite");
+        tx.objectStore(this.store).delete(id);
+    },
+
+    async clear() {
+        const db = await this.init();
+        const tx = db.transaction(this.store, "readwrite");
+        tx.objectStore(this.store).clear();
+    }
+};
+
+// --- 3. CALCULATOR CONFIG ---
+const uiConfig = {
+    settings: { 
+        volumeDiscountThreshold: { screens: 13, days: 60 },
+        minutesPerBlock: 10, dailyOpsHours: 12, totalNetworkScreens: 13, 
+        busEmail: "sales@transitmedia.com"
+    },
+    baseCosts: { static: 0.01, motion: 0.02, video: 0.03 },
+    discountBaseCosts: { static: 0.006, motion: 0.008, video: 0.015 },
+    packages: {
+        static: [{ label: "15s Basic", dur: 15, days: 30 }, { label: "30s Standard", dur: 30, days: 60 }],
+        motion: [{ label: "30s Motion", dur: 30, days: 30 }, { label: "45s Pro", dur: 45, days: 60 }],
+        video: [{ label: "60s Featured", dur: 60, days: 30 }, { label: "120s Cinema", dur: 120, days: 60 }]
+    }
+};
+
+let reachChart;
+const nFormat = (n) => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n;
+
+// --- 4. CORE FUNCTIONS ---
+function calculate() {
+    const screens = uiConfig.settings.totalNetworkScreens;
+    const days = +$('#campaignDays').val() || 0;
+    const duration = +$('#adDuration').val() || 0;
+    const adType = $('#adType').val().toLowerCase();
+    const prodFee = +$('#adType option:selected').data('fee') || 0;
+
+    const playsH = 60 / uiConfig.settings.minutesPerBlock;
+    const exposures = playsH * uiConfig.settings.dailyOpsHours * days * screens;
+    const isDiscounted = (screens >= uiConfig.settings.volumeDiscountThreshold.screens || days >= uiConfig.settings.volumeDiscountThreshold.days);
+    const rate = isDiscounted ? uiConfig.discountBaseCosts[adType] : uiConfig.baseCosts[adType];
+    const cost = (exposures * rate) + prodFee; 
+
+    $('#cost-per-play').text((exposures > 0 ? (cost / exposures) : 0).toLocaleString('en-US', {style:'currency', currency:'USD', minimumFractionDigits:3}));
+    $('#cpm-value').text(((exposures > 0 ? (cost / exposures) : 0) * 1000).toLocaleString('en-US', {style:'currency', currency:'USD'}));
+    $('#stats-per-hour').text(playsH);
+    $('#stats-daily').text((playsH * uiConfig.settings.dailyOpsHours * screens).toLocaleString());
+    $('#totalCost').text(cost.toLocaleString('en-US', { style: 'currency', currency: 'USD' }));
+    $('#sovValue').text(((duration / (uiConfig.settings.minutesPerBlock * 60)) * 100).toFixed(1) + '%');
+    $('#sovBar').css('width', (duration / (uiConfig.settings.minutesPerBlock * 60)) * 100 + '%');
+    $('#cycleSummary').text(`${nFormat(exposures)} Network Exposures`);
+    updateReachChart(exposures);
+}
+
+function renderRow(t, s, d, sc, tot, dbId = null) {
+    $('#comparisonWrapper').removeClass('d-none');
+    const row = $(`<tr data-id="${dbId}">
+        <td>${t}</td>
+        <td class="text-primary fw-bold">${s}</td>
+        <td>${d}</td>
+        <td>${sc}</td>
+        <td class="fw-bold">${tot}</td>
+        <td class="text-end no-print">
+            <button class="btn btn-sm text-danger remove-row"><i class="bi bi-trash"></i></button>
+        </td>
+    </tr>`);
+    $('#comparisonBody').append(row);
+}
+
+function updateReachChart(t) {
+    const ctx = document.getElementById('reachChart').getContext('2d');
+    if (reachChart) reachChart.destroy();
+    reachChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], datasets: [{ data: [t*.25, t*.5, t*.75, t], backgroundColor: '#0d6efd' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
+
+// --- 5. INITIALIZATION & EVENTS ---
+$(document).ready(async () => {
+    // Theme setup
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-bs-theme', savedTheme);
+
+    // Load from IndexedDB
+    const savedRows = await dbProvider.getAll();
+    if (savedRows.length > 0) {
+        savedRows.forEach(r => renderRow(r.type, r.sov, r.days, r.scr, r.total, r.id));
+    }
+
+    // Build Package Buttons
+    ['static', 'motion', 'video'].forEach(type => {
+        uiConfig.packages[type].forEach(pkg => {
+            const btn = $(`<button type="button" class="btn btn-outline-primary btn-sm package-btn">${pkg.label}</button>`);
+            btn.on('click', function() { 
+                $('.package-btn').removeClass('active'); 
+                $(this).addClass('active'); 
+                $('#adType').val(type.charAt(0).toUpperCase() + type.slice(1)); 
+                $('#adDuration').val(pkg.dur); 
+                $('#campaignDays').val(pkg.days); 
+                calculate(); 
+            });
+            $(`#pkg-${type}`).append(btn);
+        });
+    });
+    
+    $('#screens').val(uiConfig.settings.totalNetworkScreens);
+    calculate();
+});
+
+// UI Events
+$('#saveQuoteBtn').on('click', async () => {
+    const f = document.getElementById('adCalculatorForm');
+    f.classList.add('was-validated');
+    if (f.checkValidity()) {
+        const data = {
+            type: $('#adDuration').val() + 's ' + $('#adType').val(),
+            sov: $('#sovValue').text(),
+            days: $('#campaignDays').val() + 'd',
+            scr: uiConfig.settings.totalNetworkScreens,
+            total: $('#totalCost').text()
+        };
+        await dbProvider.save(data);
+        location.reload(); // Quick refresh to update table with new ID
+    }
+});
+
+$('#destroyDbBtn').on('click', () => {
+    if(confirm("DANGER: This will permanently delete the IndexedDB file. All saved quotes will be wiped. This action cannot be undone. Proceed?")) {
+        const req = indexedDB.deleteDatabase("BusAdsDB");
+        req.onsuccess = () => {
+            localStorage.clear();
+            location.reload();
+        };
+    }
+});
+
+$(document).on('click', '.remove-row', async function() {
+    const id = $(this).closest('tr').data('id');
+    if (id) await dbProvider.remove(id);
+    $(this).closest('tr').remove();
+    if(!$('#comparisonBody tr').length) $('#comparisonWrapper').addClass('d-none');
+});
+
+$('#clearTableBtn').on('click', async () => {
+    if(confirm("Clear all saved comparisons?")) {
+        await dbProvider.clear();
+        $('#comparisonBody').empty();
+        $('#comparisonWrapper').addClass('d-none');
+    }
+});
+
+$('#resetAllBtn').on('click', () => {
+    if(confirm("Clear current form inputs?")) {
+        document.getElementById('adCalculatorForm').reset();
+        calculate();
+    }
+});
+
+$('#themeToggle').on('click', () => {
+    const t = document.body.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-bs-theme', t);
+    localStorage.setItem('theme', t);
+});
+
+$('#adCalculatorForm').on('input change', calculate);
+$('#printBtn').on('click', () => window.print());
+
+$('#sendRequestBtn').on('click', function(e) {
+    const f = document.getElementById('adCalculatorForm');
+    if (!f.checkValidity()) { f.classList.add('was-validated'); return; }
+    
+    let table = "TYPE | SOV | DAYS | SCREENS | TOTAL\n";
+    $('#comparisonBody tr').each(function() {
+        const c = $(this).find('td');
+        table += `${$(c[0]).text()} | ${$(c[1]).text()} | ${$(c[2]).text()} | ${$(c[3]).text()} | ${$(c[4]).text()}\n`;
+    });
+    
+    let body = `TRANSIT QUOTE REQUEST\n\nClient: ${$('#advertiserName').val()}\nPhone: ${$('#phone').val()}\n\nCOMPARISONS:\n${table}\n\nCurrent Quote: ${$('#totalCost').text()}`;
+    window.location.href = `mailto:${uiConfig.settings.busEmail}?subject=Ad Quote Request&body=${encodeURIComponent(body)}`;
+});
+
+$('#phone').on('input', function(e) {
+    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+    e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+});
+</script>
+</body>
+</html>
