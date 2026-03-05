@@ -1,0 +1,16 @@
+{
+  "name": "TheBus Ad Architect",
+  "short_name": "BusAds",
+  "start_url": "./advertising.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d6efd",
+  "description": "Digital Ad Request and Campaign Estimate Tool",
+  "icons": [
+    {
+      "src": "square.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
